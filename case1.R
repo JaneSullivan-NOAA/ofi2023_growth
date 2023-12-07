@@ -9,8 +9,8 @@ dir.create("case1b_nonparametricWAA")
 
 # Case 1: compare empirical WAA and nonparametric WAA 
 
-# Stock info: pollock-like species with one fishery that occurs in July, one
-# survey that occurs in January
+# Model info: one fishery that occurs in July, one survey that occurs in
+# January, age comps for both fishery and survey
 
 #  Read data ----
 catch_df = readxl::read_xlsx(path = 'case1.xlsx', sheet = 1)
@@ -99,8 +99,6 @@ names(my_model1a)
 g <- as.numeric(my_model1a$gr(my_model1a$opt$par))
 h <- optimHess(my_model1a$opt$par, fn = my_model1a$fn, gr = my_model1a$gr)
 my_model1a$opt$par <- my_model1a$opt$par - solve(h, g)
-expect_false(is.null(report))
-
 max_gradient <- max(abs(my_model1a$gr(my_model1a$opt$par)))
 my_model1a$gr(my_model1a$opt$par)
 
