@@ -128,4 +128,4 @@ my_model3$rep
 names(my_model3)
 
 # Make plots:
-plot_wham_output(my_model3, out.type = 'pdf')
+plot_wham_output(my_model3, dir.main = "case3_CAAL", out.type = 'pdf')
