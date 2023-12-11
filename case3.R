@@ -1,3 +1,5 @@
+# Case 3: fit to conditional age-at-length (CAAL) data 
+
 # remotes::install_github(repo = 'GiancarloMCorrea/wham', ref='growth', INSTALL_opts = c("--no-docs", "--no-multiarch", "--no-demo"))
 library(readxl)
 library(wham)
@@ -5,6 +7,7 @@ library(ggplot2)
 library(dplyr)
 source("helper.R")
 dir.create("case3_CAAL")
+runmodels = FALSE
 
 # Case 3 ------------------------------------------------------------------
 catch_df = readxl::read_xlsx(path = 'case3.xlsx', sheet = 1)
@@ -70,8 +73,8 @@ input_data$waa_pointer_ssb = 1
 input_data$waa_pointer_jan1 = 1
 # More information:
 input_data$maturity = as.matrix(maturity_df[,2:11]) # maturity
-input_data$fracyr_SSB = matrix(0, ncol = 1, nrow = n_years) # fraction of year SSB
-input_data$Fbar_ages = 1:10 # edades para calcular Fbar
+input_data$fracyr_SSB = matrix(0, ncol = 1, nrow = n_years) # spawning fraction (0 = spawn at beginning of year)
+input_data$Fbar_ages = 1:10 # es to include in mean F calculation 
 input_data$bias_correct_process = 1 # do process bias correction, 0 = no, 1 = yes
 input_data$bias_correct_observation = 1 # do obs bias correction, 0 = no, 1 = yes 
 
@@ -84,8 +87,7 @@ input3 = wham::prepare_wham_input(model_name = "Case_3",
                                   M = list(model = 'constant', initial_means = 0.35), # M parameter
                                   selectivity = list(model = c('len-double-normal', 'len-logistic'),
                                                      initial_pars = list(c(50,-1,4,4,-5,-2), c(15, 3)),
-                                                     n_selblocks = 2#,
-                                                     # fix_pars = list(c(1), NULL)
+                                                     n_selblocks = 2, fix_pars = list(c(1), NULL)
                                                      ), # Selectivity parameter
                                   catchability = list(initial_q = 1), # Catchability parameter
                                   growth = list(model = 'vB_classic', 
@@ -93,6 +95,15 @@ input3 = wham::prepare_wham_input(model_name = "Case_3",
                                                 SD_vals = c(1, 9)),
                                   LW = list(init_vals = c(5.56e-06, 3.2))
 ) 
+
+show_selex(model = "len-double-normal", initial_pars = c(50,-1,4,4,-5,-2))
+
+
+# fix len-logistic selex
+(2+130-2)/(1+exp(-(-0.08407463)))
+(2+130-2)/(1+exp(-(0.35989867)))
+input3$data$selpars_lower;
+input3$data$selpars_upper
 
 # Fix some parameters:
 input3$map$log_N1_pars = factor(c(1, NA))
@@ -103,11 +114,18 @@ input3$map$log_NAA_sigma = factor(NA)
 input3$random = NULL
 
 # Run model:
-model3 = fit_wham(input = input3, do.retro = FALSE, do.osa = FALSE)
-model3$opt 
-model3$sdrep
-model3$rep
-names(model3)
+if(isTRUE(runmodels)) {
+  my_model3 = wham::fit_wham(MakeADFun.silent = TRUE, input = input3, do.retro = FALSE, do.osa = FALSE)
+  saveRDS(my_model3, file = "case3_CAAL/my_model3.RDS")
+
+} else {
+  my_model3 <- readRDS(file = "case3_CAAL/my_model3.RDS")
+}
+
+my_model3$opt 
+my_model3$sdrep
+my_model3$rep
+names(my_model3)
 
 # Make plots:
-plot_wham_output(model3, out.type = 'pdf')
+plot_wham_output(my_model3, out.type = 'pdf')

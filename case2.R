@@ -1,3 +1,5 @@
+# Case 2 parametric growth using marginal length comps
+
 # remotes::install_github(repo = 'GiancarloMCorrea/wham', ref='growth', INSTALL_opts = c("--no-docs", "--no-multiarch", "--no-demo"))
 library(readxl)
 library(wham)
@@ -5,6 +7,7 @@ library(ggplot2)
 library(dplyr)
 source("helper.R")
 dir.create("case2_parametericLAA")
+runmodels = FALSE
 
 # Case 2: fit model with length instead of age comps, estimating parameteric
 # growth with fixed weight-length relationship
@@ -56,7 +59,7 @@ input_data$waa_pointer_totcatch = 2
 input_data$waa_pointer_ssb = 1
 input_data$waa_pointer_jan1 = 1
 # More information:
-input_data$maturity = as.matrix(sheet5[,2:11]) # maturity-at-age
+input_data$maturity = as.matrix(maturity_df[,2:11]) # maturity-at-age
 input_data$fracyr_SSB = matrix(0, ncol = 1, nrow = n_years) # spawning fraction (0 = spawn at beginning of year)
 input_data$Fbar_ages = 1:10 # ages to include in mean F calculation 
 input_data$bias_correct_process = 1 # do process bias correction, 0 = no, 1 = yes
@@ -89,12 +92,20 @@ input2$map$log_NAA_sigma = factor(NA)
 input2$random = NULL
 
 # Run model:
-model2 = fit_wham(input = input2, do.retro = FALSE, do.osa = FALSE)
-model2$opt 
-model2$sdrep
-model2$rep
-names(model2)
+if(isTRUE(runmodels)) {
+  my_model2 = wham::fit_wham(MakeADFun.silent = TRUE, input = input2, do.retro = FALSE, do.osa = FALSE)
+  saveRDS(my_model2, file = "case2_parametericLAA/my_model2.RDS")
+  
+} else {
+  my_model2 <- readRDS(file = "case2_parametericLAA/my_model2.RDS")
+}
+my_model2$opt 
+my_model2$sdrep
+my_model2$rep
+names(my_model2)
 
 # Make plots:
-plot_wham_output(model2, dir.main = "case2_parametericLAA", out.type = 'pdf')
-# growth curve in results.pdf, param estimates in res_tables/wham_par_tables.pdf, fits to length comps in diagnostics.pdf
+plot_wham_output(my_model2, dir.main = "case2_parametericLAA", out.type = 'pdf')
+# growth curve in results.pdf, param estimates in
+# res_tables/wham_par_tables.pdf, fits to length comps in diagnostics.pdf
+setwd(here::here())
