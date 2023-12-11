@@ -1,16 +1,17 @@
-remotes::install_github(repo = 'GiancarloMCorrea/wham', ref='growth', INSTALL_opts = c("--no-docs", "--no-multiarch", "--no-demo"))
-library(readxl)
-library(wham)
-library(ggplot2)
-library(dplyr)
-source("helper.R")
-dir.create("case1a_empiricalWAA")
-dir.create("case1b_nonparametricWAA")
-
 # Case 1: compare empirical WAA and nonparametric WAA 
 
 # Model info: one fishery that occurs in July, one survey that occurs in
 # January, age comps for both fishery and survey
+
+# remotes::install_github(repo = 'GiancarloMCorrea/wham', ref='growth', INSTALL_opts = c("--no-docs", "--no-multiarch", "--no-demo"))
+library(readxl)
+library(wham)
+library(ggplot2)
+library(dplyr)
+source("helper.R") # not needed, includes function to help with selecitivity inputs
+dir.create("case1a_empiricalWAA")
+dir.create("case1b_nonparametricWAA")
+runmodels = FALSE # use RDS model object files instead of running them
 
 #  Read data ----
 catch_df = readxl::read_xlsx(path = 'case1.xlsx', sheet = 1)
@@ -88,19 +89,22 @@ my_input1a$map$logit_q = factor(NA)
 my_input1a$map$log_N1_pars = factor(c(1,NA))
 
 # Run model:
-my_model1a = wham::fit_wham(MakeADFun.silent = TRUE, input = my_input1a, do.retro = FALSE, do.osa = FALSE)
+if(isTRUE(runmodels)) {
+  my_model1a = wham::fit_wham(MakeADFun.silent = TRUE, input = my_input1a, do.retro = FALSE, do.osa = FALSE)
+  proj1a = wham::project_wham(model = my_model1a, proj.opts = list(n.yrs = 3))
+  saveRDS(my_model1a, file = "case1a_empiricalWAA/my_model1a.RDS")
+  saveRDS(proj1a, file = "case1a_empiricalWAA/proj1a.RDS")
+  
+} else {
+  my_model1a <- readRDS(file = "case1a_empiricalWAA/my_model1a.RDS")
+  proj1a <- readRDS(file = "case1a_empiricalWAA/proj1a.RDS")
+}
 
 # Explore outputs:
 my_model1a$opt 
 my_model1a$sdrep
 my_model1a$rep
 names(my_model1a)
-
-g <- as.numeric(my_model1a$gr(my_model1a$opt$par))
-h <- optimHess(my_model1a$opt$par, fn = my_model1a$fn, gr = my_model1a$gr)
-my_model1a$opt$par <- my_model1a$opt$par - solve(h, g)
-max_gradient <- max(abs(my_model1a$gr(my_model1a$opt$par)))
-my_model1a$gr(my_model1a$opt$par)
 
 # Make figures:
 wham::plot_wham_output(mod = my_model1a, dir.main = "case1a_empiricalWAA", out.type = 'pdf')
@@ -130,15 +134,20 @@ my_input1b$map$logit_q = factor(NA)
 my_input1b$map$log_N1_pars = factor(c(1,NA))
 
 # Run models:
-my_model1b = wham::fit_wham(input = my_input1b, do.retro = FALSE, do.osa = FALSE)
+if(isTRUE(runmodels)) {
+  my_model1b = wham::fit_wham(MakeADFun.silent = TRUE, input = my_input1b, do.retro = FALSE, do.osa = FALSE)
+  proj1b = wham::project_wham(model = my_model1b, proj.opts = list(n.yrs = 3))
+  saveRDS(my_model1b, file = "case1b_nonparametricWAA/my_model1b.RDS")
+  saveRDS(proj1b, file = "case1b_nonparametricWAA/proj1b.RDS")
+} else {
+  my_model1b <- readRDS(file = "case1b_nonparametricWAA/my_model1b.RDS")
+  proj1b <- readRDS(file = "case1b_nonparametricWAA/proj1b.RDS")
+}
 
 # Make plots:
 wham::plot_wham_output(mod = my_model1b, dir.main = "case1b_nonparametricWAA", out.type = 'pdf')
 
 # Compare projections ----
-proj1a = wham::project_wham(model = my_model1a, proj.opts = list(n.yrs = 3))
-proj1b = wham::project_wham(model = my_model1b, proj.opts = list(n.yrs = 3))
-names(proj1b$rep)
 
 x = summary(proj1a$sdrep)
 x[rownames(x) == "pred_waa",]
@@ -174,6 +183,19 @@ waa <- tmp %>%
   dplyr::mutate(model = "empirical_waa") %>% 
   tidyr::pivot_longer(cols = 2:11, names_to = 'age', values_to = "weight")
 
+# Default empirical WAA approach uses the most recent 5 yr mean WAA for
+# projections
+waa <- dplyr::bind_rows(
+  waa,
+  tidyr::expand_grid(
+    year = max(waa$year)+1:3,
+    model = "empirical_waa",
+    waa %>% 
+      dplyr::filter(year > max(year)-5) %>% 
+      dplyr::group_by(age) %>% 
+      dplyr::summarise(weight = mean(weight)))
+)
+          
 tmp <- as.data.frame(cbind(proj1a$years_full, array(unname(pred_waa[,1]), dim = c(2,length(proj1b$years_full),10))[1,,])) 
 colnames(tmp) <- c("year", 1:10)
 waa <- waa %>% 
@@ -187,7 +209,7 @@ waa <- waa %>%
 ggplot(waa, aes(x = year, y = weight, col = model, shape = model)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~age, scales = "free_y", ncol = 2) +
+  facet_wrap(~age, scales = "free_y", dir = "v", ncol = 2) +
   theme_bw(15) +
   theme(legend.position = "top")
 ggsave("case1_waa.png", device = "png")
