@@ -5,6 +5,7 @@
 
 *.pdf
 *.tex
-*.RDS
+//*.RDS
 *.Rmd
 *.png
+*.log
