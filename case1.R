@@ -8,7 +8,7 @@ library(readxl)
 library(wham)
 library(ggplot2)
 library(dplyr)
-source("helper.R") # not needed, includes function to help with selecitivity inputs
+source("helper.R") # not needed, includes function to help with selectivity inputs
 dir.create("case1a_empiricalWAA")
 dir.create("case1b_nonparametricWAA")
 runmodels = FALSE # use RDS model object files instead of running them
@@ -64,7 +64,7 @@ input_data$Fbar_ages = 1:10 # ages to include in mean F calculation
 input_data$bias_correct_process = 1 # do process bias correction, 0 = no, 1 = yes
 input_data$bias_correct_observation = 1 # do obs bias correction, 0 = no, 1 = yes 
 
-# Emirical WAA model ----
+# Empirical WAA model ----
 
 # Make input WHAM object (empirical WAA approach)
 my_input1a = prepare_wham_input(model_name = 'Case1_empiricalWAA',

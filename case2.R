@@ -77,8 +77,9 @@ input2 = wham::prepare_wham_input(model_name = "Case2_parametricLAA",
                                                      n_selblocks = 2), # Selectivity parameter
                                   catchability = list(initial_q = 1), # Catchability parameter
                                   growth = list(model = 'vB_classic', 
-                                                init_vals = c(0.2, 90, 10), est_pars = 1:3, 
-                                                SD_vals = c(1, 9)),
+                                                init_vals = c(0.2, 90, 10), # k, Linf, Lmin
+                                                est_pars = 1:3, 
+                                                SD_vals = c(1, 9)), # SD on Lmin, SD on plus group
                                   LW = list(init_vals = c(5.56e-06, 3.2))
 ) 
 show_selex(model = "len-double-normal", initial_pars = c(50,-1,4,4,-5,-2))

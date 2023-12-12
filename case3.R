@@ -96,15 +96,6 @@ input3 = wham::prepare_wham_input(model_name = "Case_3",
                                   LW = list(init_vals = c(5.56e-06, 3.2))
 ) 
 
-show_selex(model = "len-double-normal", initial_pars = c(50,-1,4,4,-5,-2))
-
-
-# fix len-logistic selex
-(2+130-2)/(1+exp(-(-0.08407463)))
-(2+130-2)/(1+exp(-(0.35989867)))
-input3$data$selpars_lower;
-input3$data$selpars_upper
-
 # Fix some parameters:
 input3$map$log_N1_pars = factor(c(1, NA))
 input3$map$logit_q = factor(NA)
