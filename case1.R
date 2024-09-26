@@ -60,7 +60,7 @@ input_data$waa_pointer_jan1 = 1
 # More information:
 input_data$maturity = as.matrix(maturity_df[,2:11]) # maturity
 input_data$fracyr_SSB = matrix(0, ncol = 1, nrow = n_years) # spawning fraction (0 = spawn at beginning of year)
-input_data$Fbar_ages = 1:10 # ages to include in mean F calculation
+input_data$Fbar_ages = 1:10 # ages to include in mean F calculation (ages that are most commonly caught)n 
 input_data$bias_correct_process = 1 # do process bias correction, 0 = no, 1 = yes
 input_data$bias_correct_observation = 1 # do obs bias correction, 0 = no, 1 = yes 
 
@@ -69,9 +69,13 @@ input_data$bias_correct_observation = 1 # do obs bias correction, 0 = no, 1 = ye
 # Make input WHAM object (empirical WAA approach)
 my_input1a = prepare_wham_input(model_name = 'Case1_empiricalWAA',
                                 basic_info = input_data,
-                                NAA_re = list(N1_model = 1, # estimating a mean recruitment with yearly recruitment as random effects
+                                # N1_model=1: 2 fixed effects parameters: an
+                                # initial recruitment and an instantaneous
+                                # fishing mortality rate to generate an
+                                # equilibrium abundance at age.
+                                NAA_re = list(N1_model = 1, 
                                               N1_pars = c(1e+05, 0), # initial numbers in the first age class, and equilib F rate generating the rest of the NAA in the first year
-                                              recruit_model = 2, # random about mean
+                                              recruit_model = 2, # # estimating a mean recruitment with yearly recruitment as random effects
                                               recruit_pars = 1e+05, # mean rec
                                               sigma = 'rec', # rand eff on rec devs, all other ages deterministic
                                               cor = 'iid'), 
@@ -81,6 +85,7 @@ my_input1a = prepare_wham_input(model_name = 'Case1_empiricalWAA',
                                                    n_selblocks = 2),
                                 catchability = list(initial_q = 1))
 
+my_input1a$data$use_catch_paa
 show_selex(model = "double-normal", initial_pars = c(4,-2,0,0,-5,-3), ages = input_data$ages)
 show_selex(model = "logistic", initial_pars = c(1.5,0.3), ages = input_data$ages)
 
