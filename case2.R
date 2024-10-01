@@ -108,7 +108,6 @@ sim <- my_model2$simulate(complete = TRUE)
 sim$catch_pal # array of simulated catch marginal len comps
 sim$index_pal # array of simulated index marginal len comps
 
-
 # Make plots:
 plot_wham_output(my_model2, dir.main = "case2_parametericLAA", out.type = 'pdf')
 # growth curve in results.pdf, param estimates in
